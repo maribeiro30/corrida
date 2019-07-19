@@ -1,0 +1,47 @@
+
+#Application
+server:
+  #servlet:
+  contextPath: /corrida
+  port: 8086
+
+endpoints:
+  health:
+    enabled: true
+  metrics:
+    enabled: true
+
+application:
+  version: 0.1
+  title: corrida
+
+#LOG
+logging:
+  level:
+    org:
+      springframework:
+        web: INFO
+      apache:
+        http: INFO
+    br:
+      com:
+        sf:
+          upload-cadastro: INFO
+
+info:
+  app:
+    name: Micro Services Standalone
+    description: Corrida
+    version: 0.0.1
+
+management:
+  context-path: /management
+  port: 9090
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 5MB
+      max-request-size: 5MB
+      file-size-threshold: 5MB
+
+
