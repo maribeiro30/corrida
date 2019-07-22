@@ -9,12 +9,12 @@ import org.springframework.http.HttpStatus;
 @ToString
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
+@Builder(toBuilder = true)
 public class TransferDto<T> {
 
     private HttpStatus httpStatus;
     private String description;
-    private T t = null;
+    private T t;
 
 
 }

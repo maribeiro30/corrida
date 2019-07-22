@@ -10,7 +10,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-@Builder
+@Builder(toBuilder = true)
 public class ResultadosDto {
 
     private List<ResultadoDto> resultados;

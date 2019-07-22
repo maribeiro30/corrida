@@ -7,7 +7,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
-@Builder
+@Builder(toBuilder = true)
 public class PilotoDto {
 
     private Integer codigo;

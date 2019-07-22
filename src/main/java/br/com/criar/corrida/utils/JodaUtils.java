@@ -2,9 +2,11 @@ package br.com.criar.corrida.utils;
 
 
 import org.joda.time.DateTime;
+import org.joda.time.LocalTime;
 import org.joda.time.format.DateTimeFormat;
 
 import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.DateTimeFormatterBuilder;
 
 import java.util.Date;
 
@@ -16,6 +18,9 @@ public final class JodaUtils {
     public static final String PATTERM_BR_15_DDMMYYYY_HH24MMSS = "ddMMyyyy HHmmss";
     public static final String PATTERM_BR_15_DDMMYYYY_HH24MMSSSSS = "ddMMyyyy HHmmss.SSS";
     public static final String PATTERM_BR_DD_MM_YYYY = "dd/MM/yyyy";
+
+    public static final String PATTERN_TIME = "HH:mm:ss.SSS";
+    public static final String PATTERN_MINUTO = "";
 
     private JodaUtils(){}
 
@@ -60,5 +65,11 @@ public final class JodaUtils {
         }
     }
 
+    public static LocalTime convert(String time, String pattern){
+
+        DateTimeFormatter fmt = DateTimeFormat.forPattern(pattern);
+        return fmt.parseLocalTime(time.trim());
+
+    }
 
 }

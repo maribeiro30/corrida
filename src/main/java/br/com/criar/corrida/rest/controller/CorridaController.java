@@ -21,6 +21,7 @@ import reactor.core.publisher.Mono;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 
 import static br.com.criar.corrida.utils.JodaUtils.PATTERM_BR_15_DDMMYYYY_HH24MMSSSSS;
 import static br.com.criar.corrida.utils.JodaUtils.formatarnow;
@@ -57,10 +58,10 @@ public class CorridaController {
 
             try {
 
-                File f = Files.write(new File(nameFile).toPath(),file.getBytes()).toFile();
+                Path path = Files.write(new File(nameFile).toPath(),file.getBytes());
                 final TransferDto<ResultadosDto> transfRetorno = new TransferDto<ResultadosDto>();
 
-                Flux.just(corridaService.processarLog(f)).subscribe(s ->{{
+                Flux.just(corridaService.processarLog(path,resultadoEsperado)).subscribe(s ->{{
                     transfRetorno.setDescription(s.getDescription());
                     transfRetorno.setHttpStatus(s.getHttpStatus());
                     transfRetorno.setT(s.getT());

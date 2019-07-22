@@ -1,8 +1,8 @@
 
 #Application
 server:
-  #servlet:
-  contextPath: /corrida
+  servlet:
+    contextPath: /corrida
   port: 8086
 
 endpoints:
