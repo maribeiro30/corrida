@@ -1,5 +1,7 @@
 package br.com.criar.corrida.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 import org.joda.time.LocalTime;
 
@@ -12,6 +14,7 @@ import java.math.BigDecimal;
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
+
 public class ResultadoDto {
 
     //Campos entrada
@@ -22,10 +25,6 @@ public class ResultadoDto {
     private LocalTime tempoVolta;
     private BigDecimal velocidadeMedia;
 
-    private Boolean finalizouCorrida;
-    private LocalTime tempoTotal;
-    private Integer ultimaVoltaCompleta;
-    private Integer posicaoChegada;
 
 
 }

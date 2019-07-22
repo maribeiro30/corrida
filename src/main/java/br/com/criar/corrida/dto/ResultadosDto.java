@@ -1,5 +1,6 @@
 package br.com.criar.corrida.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 
 import java.util.List;
@@ -11,8 +12,10 @@ import java.util.List;
 @AllArgsConstructor
 @ToString
 @Builder(toBuilder = true)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ResultadosDto {
 
     private List<ResultadoDto> resultados;
+    private List<RetornoResultadoDto> retornoResultados;
 
 }

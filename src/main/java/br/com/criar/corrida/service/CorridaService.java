@@ -13,6 +13,8 @@ public interface CorridaService {
 
     TransferDto<ResultadosDto> melhorVoltaCadaPiloto(ResultadosDto resultados);
 
+    TransferDto<ResultadosDto> melhorVoltaCorrida(ResultadosDto resultados);
+
     TransferDto<ResultadosDto> velocidadeMediaCadaPilotoDuranteCorrida(ResultadosDto resultados);
 
     TransferDto<ResultadosDto>  diferencaPilotosPrimeiroColocadoEmCadaVolta(ResultadosDto resultados);

@@ -4,9 +4,11 @@ import br.com.criar.corrida.dto.PilotoDto;
 import br.com.criar.corrida.dto.ResultadoDto;
 
 import java.math.BigDecimal;
-import java.time.LocalTime;
+
 import static  br.com.criar.corrida.utils.JodaUtils.convert;
-import static  br.com.criar.corrida.utils.JodaUtils.PATTERN_TIME;
+import static  br.com.criar.corrida.utils.JodaUtils.PATTERN_HOURS;
+import static  br.com.criar.corrida.utils.JodaUtils.PATTERN_MINUTS;
+
 
 public enum LayoutLog {
 
@@ -14,7 +16,7 @@ public enum LayoutLog {
     HORA(0,18) {
         @Override
         public void processarCampo(ResultadoDto resultado, String linha) {
-            resultado.setHorario(convert(matche(linha), PATTERN_TIME));
+            resultado.setHorario(convert(matche(linha), PATTERN_HOURS));
         }
     },
     PILOTO(17,36){
@@ -26,22 +28,24 @@ public enum LayoutLog {
                                         .build());
         }
     },
-    NUMERO_VOLTA(55,11){
+    NUMERO_VOLTA(55,62){
         @Override
         public void processarCampo(ResultadoDto resultado, String linha) {
             resultado.setNumeroVoltas(Integer.valueOf( matche(linha).trim()));
         }
     },
-    TEMPO_VOLTA(62,24){
+    TEMPO_VOLTA(61,86){
         @Override
         public void processarCampo(ResultadoDto resultado, String linha) {
-            resultado.setTempoVolta(convert(matche(linha),PATTERN_TIME));
+            resultado.setTempoVolta(convert(matche(linha), PATTERN_MINUTS));
         }
     },
-    VELOCIDADE_MEDIA_VOLTA(76,25){
+    VELOCIDADE_MEDIA_VOLTA(85,102){
         @Override
         public void processarCampo(ResultadoDto resultado, String linha) {
-            resultado.setVelocidadeMedia(new BigDecimal(matche(linha).trim()).setScale(3));
+            BigDecimal vlrMedia = new BigDecimal(linha.substring(85).trim().replace(",","."));
+            vlrMedia.setScale(3);
+            resultado.setVelocidadeMedia(vlrMedia);
         }
     };
 
