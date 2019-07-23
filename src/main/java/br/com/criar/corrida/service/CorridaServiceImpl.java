@@ -56,21 +56,7 @@ public class CorridaServiceImpl implements CorridaService{
                                                 .forEach( r -> {{
                                                     Optional<RetornoResultadoDto> optDto = apuracoes.getRetornoResultados().stream().filter(p-> p.getPiloto().getCodigo().equals(r.getPiloto().getCodigo()))
                                                                                             .findFirst();
-                                                   if(optDto.isPresent()){
-                                                               LocalTime lt = optDto.get().getTempoTotal().plusMinutes(r.getTempoVolta().getMinuteOfHour()).plusSeconds(r.getTempoVolta().getSecondOfMinute());
-                                                               optDto.get().setTempoTotal(lt);
-                                                               optDto.get().setUltimaVoltaCompleta(r.getNumeroVoltas());
-                                                               if(optDto.get().getUltimaVoltaCompleta() == 4)
-                                                                   optDto.get().setTerminouCorrida(true);
-                                                               else optDto.get().setTerminouCorrida(false);
-
-                                                   } else{
-                                                        apuracoes.getRetornoResultados().add(RetornoResultadoDto.builder()
-                                                                .piloto(r.getPiloto())
-                                                                .ultimaVoltaCompleta(r.getNumeroVoltas())
-                                                                .tempoTotal(r.getTempoVolta())
-                                                                .build());
-                                                   }
+                                                    calcularResultadoCorrida(apuracoes, r, optDto);
 
                                                 }});
 
@@ -82,32 +68,53 @@ public class CorridaServiceImpl implements CorridaService{
         return TransferDto.<ResultadosDto>builder().t(apuracoes).httpStatus(HttpStatus.OK).build();
     }
 
+    private void calcularResultadoCorrida(ResultadosDto apuracoes, ResultadoDto r, Optional<RetornoResultadoDto> optDto) {
+        if(optDto.isPresent()){
+                    LocalTime lt = optDto.get().getTempoTotal().plusMinutes(r.getTempoVolta().getMinuteOfHour()).plusSeconds(r.getTempoVolta().getSecondOfMinute());
+                    optDto.get().setTempoTotal(lt);
+                    optDto.get().setUltimaVoltaCompleta(r.getNumeroVoltas());
+                    if(optDto.get().getUltimaVoltaCompleta() == 4)
+                        optDto.get().setTerminouCorrida(true);
+                    else optDto.get().setTerminouCorrida(false);
+
+        } else{
+             apuracoes.getRetornoResultados().add(RetornoResultadoDto.builder()
+                     .piloto(r.getPiloto())
+                     .ultimaVoltaCompleta(r.getNumeroVoltas())
+                     .tempoTotal(r.getTempoVolta())
+                     .build());
+        }
+    }
+
     @Override
     public TransferDto<ResultadosDto> melhorVoltaCadaPiloto(ResultadosDto resultados) {
         Map<Integer,RetornoResultadoDto> map =  new HashMap<>();
 
        resultados.getResultados().stream().forEach(r -> {{
-           if(map.containsKey(r.getPiloto().getCodigo())) {
-                if(map.get(r.getPiloto().getCodigo()).getMelhorVoltaPiloto().compareTo(r.getTempoVolta()) > 0) {
-                    map.get(r.getPiloto().getCodigo()).setMelhorVoltaPiloto(r.getTempoVolta());
-                    map.get(r.getPiloto().getCodigo()).setMelhorVoltaPilotoProva(convert(r.getTempoVolta(), PATTERN_MINUTS));
-                }
-
-           }else{
-               map.put(r.getPiloto().getCodigo(), RetornoResultadoDto.builder()
-                       .piloto(r.getPiloto())
-                       .melhorVoltaPiloto(r.getTempoVolta())
-                       .melhorVoltaPilotoProva(convert(r.getTempoVolta(), PATTERN_MINUTS))
-                       .build());
-           }
+           calcularMelhorVoltaCorridaCadaPiloto(map, r);
 
        }});
-
 
         return TransferDto.<ResultadosDto>builder()
                 .httpStatus(HttpStatus.OK)
                 .t(ResultadosDto.builder().retornoResultados(map.values().stream().collect(Collectors.toList())).build())
                 .build();
+    }
+
+    private void calcularMelhorVoltaCorridaCadaPiloto(Map<Integer, RetornoResultadoDto> map, ResultadoDto r) {
+        if(map.containsKey(r.getPiloto().getCodigo())) {
+             if(map.get(r.getPiloto().getCodigo()).getMelhorVoltaPiloto().compareTo(r.getTempoVolta()) > 0) {
+                 map.get(r.getPiloto().getCodigo()).setMelhorVoltaPiloto(r.getTempoVolta());
+                 map.get(r.getPiloto().getCodigo()).setMelhorVoltaPilotoString(convert(r.getTempoVolta(), PATTERN_MINUTS));
+             }
+
+        }else{
+            map.put(r.getPiloto().getCodigo(), RetornoResultadoDto.builder()
+                    .piloto(r.getPiloto())
+                    .melhorVoltaPiloto(r.getTempoVolta())
+                    .melhorVoltaPilotoString(convert(r.getTempoVolta(), PATTERN_MINUTS))
+                    .build());
+        }
     }
 
 
@@ -124,7 +131,7 @@ public class CorridaServiceImpl implements CorridaService{
                 .t(ResultadosDto.builder()
                         .retornoResultados(Arrays.asList(RetornoResultadoDto.builder()
                                                                             .piloto(melhorVolta.getPiloto())
-                                                                            .melhorVoltaProva(convert(melhorVolta.getTempoVolta(), PATTERN_MINUTS))
+                                                                            .melhorVoltaString(convert(melhorVolta.getTempoVolta(), PATTERN_MINUTS))
                                                                             .build()))
                         .build())
                 .build();
@@ -135,25 +142,13 @@ public class CorridaServiceImpl implements CorridaService{
         Map<PilotoDto,List<BigDecimal>> map = new HashMap<PilotoDto, List<BigDecimal>>();
 
         resultados.getResultados().stream().forEach(r -> {{
-            if(map.containsKey(r.getPiloto())) {
-                map.get(r.getPiloto()).add(new BigDecimal(r.getVelocidadeMedia().doubleValue()));
-            }else {
-                map.put(r.getPiloto(), new ArrayList<BigDecimal>());
-                map.get(r.getPiloto()).add(r.getVelocidadeMedia());
-            }
+            agruparVelocidadesCadaVoltaPorPiloto(map, r);
         }});
 
         List<RetornoResultadoDto> retornos = new ArrayList<>();
         for( PilotoDto p: map.keySet()) {
-            BigDecimal sumary = new BigDecimal(map.get(p).stream().mapToDouble(BigDecimal::doubleValue).sum());
-            Integer voltas = map.get(p).size();
-            BigDecimal vm = new BigDecimal(sumary.doubleValue() / voltas).setScale(3, RoundingMode.HALF_DOWN);
-            retornos.add(RetornoResultadoDto.builder()
-                    .piloto(p)
-                    .velocidadeMediaProva(vm.doubleValue())
-                    .build());
+            calcularVelocidadeMediaCadaPilotoDuranteCorrida(map, retornos, p);
         }
-
 
         return TransferDto.<ResultadosDto>builder()
                 .httpStatus(HttpStatus.OK)
@@ -163,41 +158,102 @@ public class CorridaServiceImpl implements CorridaService{
                 .build();
     }
 
+    private void agruparVelocidadesCadaVoltaPorPiloto(Map<PilotoDto, List<BigDecimal>> map, ResultadoDto r) {
+        if(map.containsKey(r.getPiloto())) {
+            map.get(r.getPiloto()).add(new BigDecimal(r.getVelocidadeMedia().doubleValue()));
+        }else {
+            map.put(r.getPiloto(), new ArrayList<BigDecimal>());
+            map.get(r.getPiloto()).add(r.getVelocidadeMedia());
+        }
+    }
+
+    private void calcularVelocidadeMediaCadaPilotoDuranteCorrida(Map<PilotoDto, List<BigDecimal>> map, List<RetornoResultadoDto> retornos, PilotoDto p) {
+        BigDecimal sumary = new BigDecimal(map.get(p).stream().mapToDouble(BigDecimal::doubleValue).sum());
+        Integer voltas = map.get(p).size();
+        BigDecimal vm = new BigDecimal(sumary.doubleValue() / voltas).setScale(3, RoundingMode.HALF_DOWN);
+        retornos.add(RetornoResultadoDto.builder()
+                .piloto(p)
+                .velocidadeMediaProva(vm.doubleValue())
+                .build());
+    }
+
     @Override
     public TransferDto<ResultadosDto> diferencaPilotosPrimeiroColocadoEmCadaVolta(ResultadosDto resultados) {
-/*
-        List<RetornoResultadoDto> apuracoes = new ArrayList<>();
 
-        resultados.getResultados().stream().sorted(comparing(ResultadoDto::getNumeroVoltas))
-                .forEach( r -> {{
-                    Optional<RetornoResultadoDto> optDto = apuracoes.getRetornoResultados().stream().filter(p-> p.getPiloto().getCodigo().equals(r.getPiloto().getCodigo()))
-                            .findFirst();
-                    if(optDto.isPresent()){
-                        LocalTime lt = optDto.get().getTempoTotal().plusMinutes(r.getTempoVolta().getMinuteOfHour()).plusSeconds(r.getTempoVolta().getSecondOfMinute());
-                        optDto.get().setTempoTotal(lt);
-                        optDto.get().setUltimaVoltaCompleta(r.getNumeroVoltas());
-                        if(optDto.get().getUltimaVoltaCompleta() == 4)
-                            optDto.get().setTerminouCorrida(true);
-                        else optDto.get().setTerminouCorrida(false);
+        Map<Integer,List<ResultadoDto>> numeroVoltas = new HashMap<>();
+        preencherAgrupandoPorVoltas(resultados, numeroVoltas);
 
-                    } else{
-                        apuracoes.getRetornoResultados().add(RetornoResultadoDto.builder()
-                                .piloto(r.getPiloto())
-                                .ultimaVoltaCompleta(r.getNumeroVoltas())
-                                .tempoTotal(r.getTempoVolta())
-                                .build());
-                    }
+        Integer[] controle = {0,0}; //[0] volta anterior; [1] colocacao
+        List<RetornoResultadoDto> retornos = new ArrayList<>();
+        for(Integer numero : numeroVoltas.keySet()) {
+            controle[1] = 1;
+            numeroVoltas.get(numero).stream().sorted((t1, t2) -> t1.getTempoVolta().compareTo(t2.getTempoVolta()))
+                    .forEach(c -> {
+                        {
+                            calcularTempoCadaPilotoPorVoltaPrimeiroColocado(controle, retornos, numero, c);
+                            ++controle[1];
+                        }
+                    });
+        }
 
-                }});
+        return TransferDto.<ResultadosDto>builder()
+                .httpStatus(HttpStatus.OK)
+                .t(ResultadosDto.builder()
+                        .retornoResultados(retornos)
+                        .build())
+                .build();
+    }
 
-        apuracoes.getRetornoResultados().stream().sorted(comparing(RetornoResultadoDto::getTempoTotal, Comparator.naturalOrder())
-                .thenComparing(RetornoResultadoDto::getUltimaVoltaCompleta, Comparator.naturalOrder()));
-        final int[] seq = {0};
-        apuracoes.getRetornoResultados().forEach(r-> {{r.setColocacao(++seq[0]);
-            r.setTempoFinal(convert(r.getTempoTotal(), PATTERN_MINUTS)); }});
+    private void calcularTempoCadaPilotoPorVoltaPrimeiroColocado(Integer[] controle, List<RetornoResultadoDto> retornos, Integer numero, ResultadoDto c) {
+        if(!controle[0].equals(numero)){
+            retornos.add(RetornoResultadoDto.builder()
+                    .piloto(c.getPiloto())
+                    .colocacao(controle[1])
+                    .tempoVolta(c.getTempoVolta())
+                    .volta(c.getNumeroVoltas())
+                    .build());
+            controle[0] = numero;
+        }else{
+            LocalTime lt = c.getTempoVolta().minusMinutes(retornos.get(0).getTempoVolta().getMinuteOfHour())
+                    .minusSeconds(retornos.get(0).getTempoVolta().getSecondOfMinute())
+                    .minusMillis(retornos.get(0).getTempoVolta().getMillisOfSecond());
+            retornos.add(RetornoResultadoDto.builder()
+                    .piloto(c.getPiloto())
+                    .colocacao(controle[1])
+                    .tempoVolta(c.getTempoVolta())
+                    .volta(c.getNumeroVoltas())
+                    .diferencaPrimeiroColocado(lt)
+                    .diferencaPrimeiroColocadoCorrida(convert(lt,PATTERN_MINUTS))
+                    .build());
+        }
+    }
 
-*/
-        return null;
+    private void preencherAgrupandoPorVoltas(ResultadosDto resultados, Map<Integer, List<ResultadoDto>> numeroVoltas) {
+        resultados.getResultados().stream()
+                                    .sorted(comparing(ResultadoDto::getNumeroVoltas))
+                                        .forEach(r -> {{
+                                            if(numeroVoltas.containsKey(r.getNumeroVoltas()))
+                                                numeroVoltas.get(r.getNumeroVoltas()).add(ResultadoDto.builder()
+                                                                                            .colunaPiloto(r.getColunaPiloto())
+                                                                                            .horario(r.getHorario())
+                                                                                            .numeroVoltas(r.getNumeroVoltas())
+                                                                                            .piloto(r.getPiloto())
+                                                                                            .tempoVolta(r.getTempoVolta())
+                                                                                            .velocidadeMedia(r.getVelocidadeMedia())
+                                                                                            .build());
+                                            else {
+                                                List<ResultadoDto> list = new ArrayList<>();
+                                                list.add(ResultadoDto.builder()
+                                                        .colunaPiloto(r.getColunaPiloto())
+                                                        .horario(r.getHorario())
+                                                        .numeroVoltas(r.getNumeroVoltas())
+                                                        .piloto(r.getPiloto())
+                                                        .tempoVolta(r.getTempoVolta())
+                                                        .velocidadeMedia(r.getVelocidadeMedia())
+                                                        .build());
+                                                numeroVoltas.put(r.getNumeroVoltas(), list);
+                                            }
+                                        }});
     }
 
     @Override
