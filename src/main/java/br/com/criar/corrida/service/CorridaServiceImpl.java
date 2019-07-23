@@ -77,7 +77,7 @@ public class CorridaServiceImpl implements CorridaService{
         apuracoes.getRetornoResultados().stream().sorted(comparing(RetornoResultadoDto::getTempoTotal, Comparator.naturalOrder())
                                                           .thenComparing(RetornoResultadoDto::getUltimaVoltaCompleta, Comparator.naturalOrder()));
         final int[] seq = {0};
-        apuracoes.getRetornoResultados().forEach(r-> {{r.setPosicaoChegada(++seq[0]);
+        apuracoes.getRetornoResultados().forEach(r-> {{r.setColocacao(++seq[0]);
                                                        r.setTempoFinal(convert(r.getTempoTotal(), PATTERN_MINUTS)); }});
         return TransferDto.<ResultadosDto>builder().t(apuracoes).httpStatus(HttpStatus.OK).build();
     }
@@ -165,12 +165,62 @@ public class CorridaServiceImpl implements CorridaService{
 
     @Override
     public TransferDto<ResultadosDto> diferencaPilotosPrimeiroColocadoEmCadaVolta(ResultadosDto resultados) {
+/*
+        List<RetornoResultadoDto> apuracoes = new ArrayList<>();
+
+        resultados.getResultados().stream().sorted(comparing(ResultadoDto::getNumeroVoltas))
+                .forEach( r -> {{
+                    Optional<RetornoResultadoDto> optDto = apuracoes.getRetornoResultados().stream().filter(p-> p.getPiloto().getCodigo().equals(r.getPiloto().getCodigo()))
+                            .findFirst();
+                    if(optDto.isPresent()){
+                        LocalTime lt = optDto.get().getTempoTotal().plusMinutes(r.getTempoVolta().getMinuteOfHour()).plusSeconds(r.getTempoVolta().getSecondOfMinute());
+                        optDto.get().setTempoTotal(lt);
+                        optDto.get().setUltimaVoltaCompleta(r.getNumeroVoltas());
+                        if(optDto.get().getUltimaVoltaCompleta() == 4)
+                            optDto.get().setTerminouCorrida(true);
+                        else optDto.get().setTerminouCorrida(false);
+
+                    } else{
+                        apuracoes.getRetornoResultados().add(RetornoResultadoDto.builder()
+                                .piloto(r.getPiloto())
+                                .ultimaVoltaCompleta(r.getNumeroVoltas())
+                                .tempoTotal(r.getTempoVolta())
+                                .build());
+                    }
+
+                }});
+
+        apuracoes.getRetornoResultados().stream().sorted(comparing(RetornoResultadoDto::getTempoTotal, Comparator.naturalOrder())
+                .thenComparing(RetornoResultadoDto::getUltimaVoltaCompleta, Comparator.naturalOrder()));
+        final int[] seq = {0};
+        apuracoes.getRetornoResultados().forEach(r-> {{r.setColocacao(++seq[0]);
+            r.setTempoFinal(convert(r.getTempoTotal(), PATTERN_MINUTS)); }});
+
+*/
         return null;
     }
 
     @Override
     public TransferDto<ResultadosDto> diferencaPilotosAposVencedor(ResultadosDto resultados) {
-        return null;
+        TransferDto<ResultadosDto> transferResultado = resultadoCorrida(resultados);
+        if(!HttpStatus.OK.equals(transferResultado.getHttpStatus()))
+            return transferResultado;
+
+        LocalTime primeiro = transferResultado.getT().getRetornoResultados().get(0).getTempoTotal();
+
+        transferResultado.getT().getRetornoResultados().forEach( r -> {{
+            if(Integer.valueOf("1").equals(r.getColocacao()))
+                return;
+
+            r.setDiferencaPrimeiroColocado(r.getTempoTotal().minusMinutes(primeiro.getMinuteOfHour())
+                                                                .minusSeconds(primeiro.getSecondOfMinute())
+                                                                    .minusMillis(primeiro.getMillisOfSecond()));
+
+            r.setDiferencaPrimeiroColocadoCorrida(convert(r.getDiferencaPrimeiroColocado(),PATTERN_MINUTS));
+        }});
+
+        return transferResultado;
+
     }
 
 }

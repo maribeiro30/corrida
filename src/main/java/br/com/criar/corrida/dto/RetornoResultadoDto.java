@@ -14,7 +14,7 @@ import java.math.BigDecimal;
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonIgnoreProperties(value= {"tempoTotal","melhorVoltaPiloto"})
+@JsonIgnoreProperties(value= {"tempoTotal","melhorVoltaPiloto","diferencaPrimeiroColocado"})
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class RetornoResultadoDto {
 
@@ -26,7 +26,11 @@ public class RetornoResultadoDto {
     private String tempoFinal;
     private Integer ultimaVoltaCompleta;
     @JsonProperty("colocação")
-    private Integer posicaoChegada;
+    private Integer colocacao;
+    private LocalTime diferencaPrimeiroColocado;
+    @JsonProperty("diferenca-primeiro-colocado")
+    private String diferencaPrimeiroColocadoCorrida;
+
 
     private LocalTime melhorVoltaPiloto;
     @JsonProperty("melhor-volta-piloto")

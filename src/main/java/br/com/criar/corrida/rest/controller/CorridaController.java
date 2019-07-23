@@ -27,7 +27,7 @@ import static br.com.criar.corrida.utils.JodaUtils.PATTERM_BR_15_DDMMYYYY_HH24MM
 import static br.com.criar.corrida.utils.JodaUtils.formatarnow;
 
 @Controller
-@RequestMapping(value = "/corrida")
+@RequestMapping
 @Api(value = "Processamento de LOG.", description = "Processar o arquivo de logs da corrida.")
 public class CorridaController {
 
