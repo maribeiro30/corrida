@@ -19,10 +19,16 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.*;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import static java.util.Comparator.comparing;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.minBy;
 import static org.junit.Assert.*;
 
 @RunWith(SpringRunner.class)
@@ -48,13 +54,16 @@ public class LogServiceImplTest {
     @Test
     public void parseStreamTest() throws IOException {
 
-        List<Integer> lista = Arrays.asList(1, 2, 3, 4, 5, 6);
+        Path pathTemp = Paths.get("teste_corrida.log");
+        Files.copy(path,pathTemp, StandardCopyOption.REPLACE_EXISTING);
 
-        System.out.printf("teste",
-        Stream.of(lista)
-                .reduce(1,(x,y) -> x *y));
+        TransferDto<ResultadosDto> transferResultados = service.parse(pathTemp);
 
 
+        Map<Integer, ResultadosDto> agrupado = transferResultados.getT().getResultados().stream()
+                    .sorted(comparing(ResultadoDto::getNumeroVoltas).thenComparing(ResultadoDto::getTempoVolta))
+                    .reduce(groupingBy(ResultadoDto::getNumeroVoltas, minBy(ResultadoDto::getTempoVolta)))
+                    .collect(Collectors.toList());
 
     }
 
