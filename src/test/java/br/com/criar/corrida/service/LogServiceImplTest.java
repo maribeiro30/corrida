@@ -18,6 +18,10 @@ import org.springframework.test.context.junit4.SpringRunner;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import static org.junit.Assert.*;
 
@@ -42,6 +46,19 @@ public class LogServiceImplTest {
     }
 
     @Test
+    public void parseStreamTest() throws IOException {
+
+        List<Integer> lista = Arrays.asList(1, 2, 3, 4, 5, 6);
+
+        System.out.printf("teste",
+        Stream.of(lista)
+                .reduce(1,(x,y) -> x *y));
+
+
+
+    }
+
+    @Test
     public void parseOpenFileTest() throws IOException {
 
         Path pathTemp = Paths.get("teste_corrida.log");
@@ -54,6 +71,8 @@ public class LogServiceImplTest {
         assertEquals("Extração das linhas do arquivo de log esta com falhas",transferResultados.getT().getResultados().size(),23);
 
     }
+
+
 
 
     @Test

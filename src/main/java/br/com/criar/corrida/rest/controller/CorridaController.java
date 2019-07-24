@@ -43,7 +43,6 @@ public class CorridaController {
     @Autowired
     private CorridaService corridaService;
 
-
     @PostMapping("/log")
     @ApiOperation(value = "Enviar arquivo de log, para processamento. Dominios ",
             consumes = MediaType.TEXT_EVENT_STREAM_VALUE,
@@ -57,7 +56,6 @@ public class CorridaController {
             String nameFile = formatarnow(PATTERM_BR_15_DDMMYYYY_HH24MMSSSSS).replaceAll(" ","_").concat("-"+file.getOriginalFilename());
 
             try {
-
                 Path path = Files.write(new File(nameFile).toPath(),file.getBytes());
                 final TransferDto<ResultadosDto> transfRetorno = new TransferDto<ResultadosDto>();
 

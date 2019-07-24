@@ -228,6 +228,7 @@ public class CorridaServiceImpl implements CorridaService{
         }
     }
 
+
     private void preencherAgrupandoPorVoltas(ResultadosDto resultados, Map<Integer, List<ResultadoDto>> numeroVoltas) {
         resultados.getResultados().stream()
                                     .sorted(comparing(ResultadoDto::getNumeroVoltas))
@@ -276,7 +277,6 @@ public class CorridaServiceImpl implements CorridaService{
         }});
 
         return transferResultado;
-
     }
 
 }
